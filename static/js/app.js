@@ -1,5 +1,6 @@
+var samples;
 d3.json("./static/data/samples.json").then((data) => {
-var samples=data.samples;
+samples=data.samples;
 console.log(samples);
 });
 
