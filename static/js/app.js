@@ -1,12 +1,12 @@
-var samples;
+var samplesdata;
 d3.json("./static/data/samples.json").then((data) => {
-samples=data.samples;
+samplesdata=data.samples;
 console.log(samples);
 });
 
+//var sortedByGreekSearch = data.sort((a, b) => b.greekSearchResults - a.greekSearchResults);
 
-
-var sortedBySampleValues = samples.sort((a, b) => b.sample_values - a.sample_values);
+var sortedBySampleValues = samplesdata.sort((a, b) => b.sample_values - a.sample_values);
 console.log(sortedBySampleValues)
 
 top10Samples=sortedBySampleValues.slice(0,10);
