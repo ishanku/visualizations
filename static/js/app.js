@@ -20,7 +20,24 @@ var trace1 = {
   x: reversedTop.map(object => object.otu_ids),
   y: reversedTop.map(object => object.sample_values),
   text: reversedTop.map(object => object.otu_labels),
-  name: "Top 10 OTUs found in individual",
+  name: "Top 10 OTUs",
   type: "bar",
   orientation: "h"
 };
+
+
+var bardata = [trace1];
+
+// Apply the group bar mode to the layout
+var layout = {
+  title: "Top 10 OTUs found in individual",
+  margin: {
+    l: 100,
+    r: 100,
+    t: 100,
+    b: 100
+  }
+};
+
+// Render the plot to the div tag with id "plot"
+Plotly.newPlot("plot", bardata, layout);
