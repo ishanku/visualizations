@@ -1,5 +1,6 @@
 var select=d3.select('#selDataset');
 var id;
+var maxwfreq=0;
 buildSelect();
 
 function unpack(rows, index) {
@@ -14,6 +15,10 @@ d3.json("./static/data/samples.json").then((data) => {
       Object.entries(element).forEach(([key, value]) => {
         if (key=="id"){
           select.append("option").attr("value",value).text(value);
+        }
+        if (key=="wfreq"){
+          if (value > maxwfreq)
+            maxwfreq=value;
         }
       });
     });
@@ -32,7 +37,7 @@ function optionChanged(id){
           if(value==id){
             console.log(data.metadata[i]);
             console.log(data.samples[i])
-            draw(data.samples[i]);
+            draw(data.samples[i],data.metadata[i].wfreq);
             table(data.metadata[i]);
           }
         }
@@ -42,7 +47,7 @@ function optionChanged(id){
 }); 
 }
 
-function chartNow(xaxis,yaxis,ticks,type,title,orientation,color,colorscale,size,width,mode,val)
+function chartNow(xaxis,yaxis,ticks,type,title,orientation,color,colorscale,size,width,mode,val,wfreq)
 {
   if (width == null){
     width = 500;
@@ -54,14 +59,43 @@ function chartNow(xaxis,yaxis,ticks,type,title,orientation,color,colorscale,size
     text = ticks.reverse();
   }
   if (type=="gauge"){
+    var level=wfreq*20;
+    if ( maxrange % 2 == 0)
+      var maxrange=maxwfreq + 2;
+    else
+      var maxrange=maxwfreq + 3;
     var trace1 = {
       domain: { x: [0, 1], y: [0, 1] },
       value: val,
-      title: { text: ticks },
       type: "indicator",
-      mode: mode
+      mode: mode,
+      title: { text: level, font: { size: 24 } },
+      delta: { reference: maxrange/4, increasing: { color: "Purple" } },
+      gauge: {
+        axis: { range: [null, maxrange], tickwidth: 1, tickcolor: "darkblue" },
+        bar: { color: "#DAF7A6" },
+        bgcolor: "white",
+        borderwidth: 2,
+        bordercolor: "gray",
+        steps: [
+          { range: [0, maxrange/8],color: "#C9DBC7" },
+          { range: [maxrange/8, maxrange/4], color: "#93D58F" },
+          { range: [maxrange/4, maxrange/2], color: "#70CF66" },
+          { range: [maxrange/2, (4*maxrange)/6], color: "#46B03B" },
+          { range: [(4*maxrange)/6,maxrange], color: "green" }
+        ],
+        threshold: {
+          line: { color: "red", width: 4 },
+          thickness: 0.75,
+          value: 0.25
+        }}
     }
-  var layout = { width: 600, height: 500, margin: { t: 0, b: 0 } };
+  var layout = { 
+    title: title,
+    width: 600, height: 350, margin: { t: 25, r: 25, l: 25, b: 25 } ,
+    paper_bgcolor: "lavender",
+  font: { color: "darkblue", family: "Arial" }
+  };
   }
   else{
   var trace1 = {
@@ -94,7 +128,7 @@ var layout = {
 var chartdata = [trace1];
 Plotly.newPlot(type, chartdata, layout);
 }
-function draw(data){
+function draw(data,freq){
   // Draw Bar
   var xaxis = data.sample_values.slice(0,10);
   var yaxis = data.otu_ids.slice(0, 10).map(otuID => `OTU ${otuID}`);
@@ -104,7 +138,8 @@ function draw(data){
   var size =null;
   var val=null;
   var mode =null;
-  chartNow(xaxis,yaxis,ticks,"bar","Top 10 OTUs in Individuals","h",color,colorscale,size,null,mode,val)
+  var wfreq=null;
+  chartNow(xaxis,yaxis,ticks,"bar","Top 10 OTUs in Individuals","h",color,colorscale,size,null,mode,val,wfreq)
 //Draw Bubble
   xaxis= data.otu_ids
   yaxis= data.sample_values
@@ -114,16 +149,18 @@ function draw(data){
   size= data.sample_values
   val=null;
   mode=null
-  chartNow(xaxis,yaxis,ticks,"bubble","OTUs in Individuals",null,color,colorscale,size,900,mode,val)
+  wfreq=null;
+  chartNow(xaxis,yaxis,ticks,"bubble","OTUs in Individuals",null,color,colorscale,size,900,mode,val,wfreq)
 
   //Draw Gauge
-  ticks="Speed"
+  ticks="<b>Belly Button Washing Frequency</b> <br> Scrubs per Week"
   color=null
   colorscale=null
   size=null;
-  mode="gauge+number";
-  val=data.sample_values[0];
-  //chartNow(xaxis,yaxis,ticks,"gauge","OTUs in Individuals",null,color,colorscale,size,null,mode,val)
+  mode="gauge+number+delta";
+  val=freq;
+  wfreq=freq;
+  chartNow(xaxis,yaxis,ticks,"gauge","<b>Belly Button Washing Frequency</b> <br> Scrubs per Week",null,color,colorscale,size,null,mode,val,wfreq)
   
   
 }
@@ -198,6 +235,6 @@ function table(data){
         yaxis: {zeroline:false, showticklabels:false,
                     showgrid: false, range: [-1, 1]}
         };
-        Plotly.newPlot("gauge", data, layout);
+        Plotly.newPlot("gauge-small", data, layout);
 
 }
